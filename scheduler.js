@@ -1,30 +1,19 @@
 import cron from 'node-cron';
-import axios from 'axios';
-import dotenv from 'dotenv';
-import Birthday from './models/Birthday.js';
 import dayjs from 'dayjs';
-
-dotenv.config();
+import Event from './models/Event.js';
+import { sendSMS } from './utils/smsSender.js';
 
 export const startScheduler = () => {
   cron.schedule('0 9 * * *', async () => {
     const today = dayjs().format('MM-DD');
-    const birthdays = await Birthday.find({ date: today });
+    const events = await Event.find();
 
-    for (const person of birthdays) {
-      try {
-        await axios.post(process.env.SMS_SYNC_URL, {
-          username: process.env.SMS_SYNC_USERNAME,
-          password: process.env.SMS_SYNC_PASSWORD,
-          to: person.phone,
-          message: `🎉 শুভ জন্মদিন ${person.name}!`
-        });
-        console.log(`✅ SMS sent to ${person.name}`);
-      } catch (error) {
-        console.error(`❌ Failed to send SMS to ${person.name}:`, error.message);
-      }
+    const todayEvents = events.filter(
+      e => dayjs(e.eventDate).format('MM-DD') === today
+    );
+
+    for (const event of todayEvents) {
+      await sendSMS(event.phone, event.customMessage);
     }
   });
-
-  console.log('🕒 SMS scheduler started');
 };
