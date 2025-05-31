@@ -11,15 +11,22 @@ router.get('/', async (req, res) => {
 
 // POST create event
 router.post('/', async (req, res) => {
-  const { clientName, phone, eventType, eventDate, customMessage } = req.body;
+  const { eventType, clientName, phone, eventDate, customMessage } = req.body;
+
   try {
-    const event = new Event({ clientName, phone, eventType, eventDate, customMessage });
-    await event.save();
-    res.status(201).json({ message: '✅ Event added!' });
-  } catch (error) {
-    res.status(500).json({ error: '❌ Failed to save event' });
+    if (!eventType || !clientName || !phone || !eventDate || !customMessage) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const newEvent = new Event({ eventType, clientName, phone, eventDate, customMessage });
+    await newEvent.save();
+    res.status(201).json({ message: 'Event added successfully' });
+  } catch (err) {
+    console.error('Error saving event:', err);
+    res.status(500).json({ error: '❌ Failed to save event', details: err.message });
   }
 });
+
 
 // DELETE event
 router.delete('/:id', async (req, res) => {
@@ -30,5 +37,7 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({ error: '❌ Failed to delete event' });
   }
 });
+
+
 
 export default router;
