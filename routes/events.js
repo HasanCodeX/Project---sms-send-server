@@ -38,6 +38,9 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// edit event
+
+
 
 
 export default router;
